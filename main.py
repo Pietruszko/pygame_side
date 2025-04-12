@@ -1,88 +1,46 @@
 import pygame
-import math
+import sys
+from settings import *
+from player import *
+from map import *
 
-pygame.init()
-screen_size = (1280, 720)
-screen = pygame.display.set_mode(screen_size)
-clock = pygame.time.Clock()
-running = True
-dt = 0
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode(SCREEN_SIZE)
+        self.clock = pygame.time.Clock()
+        self.delta_time = 1
+        self.new_game()
 
-_ = False
-mini_map = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, _, _, _, _, _, _, _, 1, _, _, _, _, _, _, 1],
-    [1, _, 1, 1, _, _, _, _, 1, _, _, _, _, _, _, 1],
-    [1, _, 1, _, _, _, _, _, _, _, _, 1, 1, _, _, 1],
-    [1, _, _, _, _, _, _, _, _, _, _, 1, 1, _, _, 1],
-    [1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1],
-    [1, _, _, _, 1, 1, 1, _, _, _, _, _, _, _, _, 1],
-    [1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-]
+    def new_game(self):
+        self.map = Map(self)
+        self.player = Player(self)
 
-world_map = {}
+    def update(self):
+        pygame.display.flip()
+        self.clock.tick(FPS)
+        pygame.display.set_caption(f"FPS: {self.clock.get_fps():.2f}")
+        self.delta_time = self.clock.tick(FPS)
+        self.player.update()
 
-player_x = 5
-player_y = 5
-player_angle = 0
-player_speed = 5
+    def draw(self):
+        self.screen.fill("black")
+        self.map.draw()
+        self.player.draw()
+        
+    def check_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                pygame.quit()
+                sys.exit()
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    def run(self):
+        while True:
+            self.check_events()
+            self.update()
+            self.draw()
 
-    screen.fill("black")
-
-    # Add your game logic here v
-
-    for j, row in enumerate(mini_map):
-        for i, value in enumerate(row):
-            if value:
-                world_map[(i, j)] = value
-
-    [pygame.draw.rect(screen, "white", (pos[0] * 80, pos[1] * 80, 80, 80), 2) for pos in world_map]
-
-    sin_angle = math.sin(player_angle)
-    cos_angle = math.cos(player_angle)
-    dx = 0
-    dy = 0
-    speed = player_speed * dt
-    speed_sin = speed * sin_angle
-    speed_cos = speed * cos_angle
-
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
-        dx += speed_cos
-        dy += speed_sin
-    if keys[pygame.K_s]:
-        dx += -speed_cos
-        dy += -speed_sin
-    if keys[pygame.K_a]:
-        dx += speed_sin
-        dy += -speed_cos
-    if keys[pygame.K_d]:
-        dx += -speed_sin
-        dy += speed_cos
-
-    player_x += dx
-    player_y += dy
-
-    if keys[pygame.K_LEFT]:
-        player_angle -= 5 * dt
-    if keys[pygame.K_RIGHT]:
-        player_angle += 5 * dt
-    player_angle %= math.tau
-
-    pygame.draw.line(screen, 'yellow', (player_x * 100, player_y * 100),
-                     (player_x * 100 + screen_size[0] * math.cos(player_angle),
-                     player_y * 100 + screen_size[1] * math.sin(player_angle)), 2)
-    pygame.draw.circle(screen, 'blue', (player_x * 100, player_y * 100), 15)
-
-    # Add your game logic here ^
-
-    pygame.display.flip()
-    dt = clock.tick(60) / 1000
-
-pygame.quit()
+if __name__ == "__main__":
+    game = Game()
+    game.run()
+    
